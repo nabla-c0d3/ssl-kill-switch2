@@ -8,20 +8,21 @@
 
 #import <Foundation/Foundation.h>
 #import <Security/SecureTransport.h>
-//#import "substrate.h"
+
+#if SUBSTRATE_BUILD
+#import <CydiaSubstrate/substrate.h>
+#else
+#import "fishhook.h"
+#import <dlfcn.h>
+#endif
+
 
 #define PREFERENCEFILE "/private/var/mobile/Library/Preferences/com.nablac0d3.SSLKillSwitchSettings.plist"
 
 
-static void MSHookFunction(void *test, void *test2, void **test3)
-{
-    // TBD
-}
-
-
 #pragma mark Utility Functions
 
-void SSKLog(NSString *format, ...)
+static void SSKLog(NSString *format, ...)
 {
     // Only log in debug builds
 #if DEBUG
@@ -34,6 +35,7 @@ void SSKLog(NSString *format, ...)
 }
 
 
+#if SUBSTRATE_BUILD
 // Utility function to read the Tweak's preferences
 static BOOL shouldHookFromPreference(NSString *preferenceSetting)
 {
@@ -51,6 +53,7 @@ static BOOL shouldHookFromPreference(NSString *preferenceSetting)
     }
     return shouldHook;
 }
+#endif
 
 
 #pragma mark SSLSetSessionOption Hook
@@ -125,17 +128,41 @@ static OSStatus replaced_SSLHandshake(SSLContextRef context)
 
 __attribute__((constructor)) static void init(int argc, const char **argv)
 {
+#if SUBSTRATE_BUILD
     // Should we enable the hook ?
     if (shouldHookFromPreference(@"killSwitchSSLHandshake"))
     {
-        SSKLog(@"Hook Enabled.");
+        // Substrate-based hooking; only hook if the preference file says so
+        SSKLog(@"Subtrate hook enabled.");
         MSHookFunction((void *) SSLHandshake,(void *)  replaced_SSLHandshake, (void **) &original_SSLHandshake);
         MSHookFunction((void *) SSLSetSessionOption,(void *)  replaced_SSLSetSessionOption, (void **) &original_SSLSetSessionOption);
         MSHookFunction((void *) SSLCreateContext,(void *)  replaced_SSLCreateContext, (void **) &original_SSLCreateContext);
     }
     else
     {
-        SSKLog(@"Hook Disabled.");
+        SSKLog(@"Subtrate hook disabled.");
     }
+    
+#else
+    // Fishhook-based hooking, for OS X builds; always hook
+    SSKLog(@"Fishhook hook enabled.");
+    original_SSLHandshake = dlsym(RTLD_DEFAULT, "SSLHandshake");
+    if ((rebind_symbols((struct rebinding[1]){{(char *)"SSLHandshake", (void *)replaced_SSLHandshake}}, 1) < 0))
+    {
+        SSKLog(@"Hooking failed.");
+    }
+    
+    original_SSLSetSessionOption = dlsym(RTLD_DEFAULT, "SSLSetSessionOption");
+    if ((rebind_symbols((struct rebinding[1]){{(char *)"SSLSetSessionOption", (void *)replaced_SSLSetSessionOption}}, 1) < 0))
+    {
+        SSKLog(@"Hooking failed.");
+    }
+    
+    original_SSLCreateContext = dlsym(RTLD_DEFAULT, "SSLCreateContext");
+    if ((rebind_symbols((struct rebinding[1]){{(char *)"SSLCreateContext", (void *)replaced_SSLCreateContext}}, 1) < 0))
+    {
+        SSKLog(@"Hooking failed.");
+    }
+#endif
 }
 
