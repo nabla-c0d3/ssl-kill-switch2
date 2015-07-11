@@ -34,4 +34,7 @@ infer-out/
 # Theos builds
 /theos
 /obj
+/_
+*.deb
+.theos
 
