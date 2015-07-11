@@ -31,3 +31,7 @@ html/
 # Facebook Infer
 infer-out/
 
+# Theos builds
+/theos
+/obj
+
