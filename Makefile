@@ -12,3 +12,8 @@ SSLKillSwitch2_CFLAGS=-DSUBSTRATE_BUILD
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 include $(THEOS_MAKE_PATH)/aggregate.mk
+
+
+after-install::
+	# Respring the device
+	install.exec "killall -9 SpringBoard"
