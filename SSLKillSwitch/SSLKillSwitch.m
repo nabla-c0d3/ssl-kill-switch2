@@ -10,7 +10,7 @@
 #import <Security/SecureTransport.h>
 
 #if SUBSTRATE_BUILD
-#import <CydiaSubstrate/substrate.h>
+#import "substrate.h"
 #else
 #import "fishhook.h"
 #import <dlfcn.h>
