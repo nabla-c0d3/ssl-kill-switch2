@@ -17,8 +17,8 @@
 #endif
 
 
-#define PREFERENCEFILE "/private/var/mobile/Library/Preferences/com.nablac0d3.SSLKillSwitchSettings.plist"
-
+#define PREFERENCE_FILE @"/private/var/mobile/Library/Preferences/com.nablac0d3.SSLKillSwitchSettings.plist"
+#define PREFERENCE_KEY @"shouldDisableCertificateValidation"
 
 #pragma mark Utility Functions
 
@@ -40,7 +40,7 @@ static void SSKLog(NSString *format, ...)
 static BOOL shouldHookFromPreference(NSString *preferenceSetting)
 {
     BOOL shouldHook = NO;
-    NSMutableDictionary* plist = [[NSMutableDictionary alloc] initWithContentsOfFile:@PREFERENCEFILE];
+    NSMutableDictionary* plist = [[NSMutableDictionary alloc] initWithContentsOfFile:PREFERENCE_FILE];
     
     if (!plist)
     {
@@ -130,7 +130,7 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
 {
 #if SUBSTRATE_BUILD
     // Should we enable the hook ?
-    if (shouldHookFromPreference(@"killSwitchSSLHandshake"))
+    if (shouldHookFromPreference(PREFERENCE_KEY))
     {
         // Substrate-based hooking; only hook if the preference file says so
         SSKLog(@"Subtrate hook enabled.");
