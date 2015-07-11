@@ -74,6 +74,11 @@ static OSStatus replaced_SSLSetSessionOption(SSLContextRef context,
 
 #pragma mark SSLCreateContext Hook
 
+// Declare the TrustKit selector we need here
+@protocol TrustKitMethod <NSObject>
++ (void) resetConfiguration;
+@end
+
 static SSLContextRef (*original_SSLCreateContext)(CFAllocatorRef alloc,
                                                   SSLProtocolSide protocolSide,
                                                   SSLConnectionType connectionType);
@@ -83,6 +88,13 @@ static SSLContextRef replaced_SSLCreateContext(CFAllocatorRef alloc,
                                                SSLConnectionType connectionType)
 {
     SSLContextRef sslContext = original_SSLCreateContext(alloc, protocolSide, connectionType);
+    
+    // Disable TrustKit if it is present
+    Class TrustKit = NSClassFromString(@"TrustKit");
+    if (TrustKit != nil)
+    {
+        [TrustKit performSelector:@selector(resetConfiguration)];
+    }
     
     // Immediately set the kSSLSessionOptionBreakOnServerAuth option in order to disable cert validation
     original_SSLSetSessionOption(sslContext, kSSLSessionOptionBreakOnServerAuth, true);
