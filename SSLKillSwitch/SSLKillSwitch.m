@@ -24,14 +24,11 @@
 
 static void SSKLog(NSString *format, ...)
 {
-    // Only log in debug builds
-#if DEBUG
     NSString *newFormat = [[NSString alloc] initWithFormat:@"=== SSL Kill Switch 2: %@", format];
     va_list args;
     va_start(args, format);
     NSLogv(newFormat, args);
     va_end(args);
-#endif
 }
 
 
