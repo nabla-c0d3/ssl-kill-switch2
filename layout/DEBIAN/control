@@ -1,4 +1,4 @@
-Package: com.nablac0d3.SSLKillSwitch
+Package: com.nablac0d3.SSLKillSwitch2
 Name: SSL Kill Switch 2
 Depends: mobilesubstrate, preferenceloader
 Version: 0.7
