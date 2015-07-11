@@ -123,10 +123,10 @@ Changelog
 License
 -------
 
-MIT - See LICENSE.txt
+MIT - See ./LICENSE.
 
 
 Author
 ------
 
-Alban Diquet - https://github.com/nabla-c0d3
+Alban Diquet - @nabla_c0d3
