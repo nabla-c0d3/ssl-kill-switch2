@@ -46,18 +46,14 @@ The following dependencies should be installed using Cydia:
 * PreferenceLoader
 
 Then, download the latest pre-compiled package available in the release tab of 
-the SSL Kill Switch 2's GitHub page, copy it to the device and install it:
+the SSL Kill Switch 2's GitHub page. Copy it to the device, install it and 
+respring the device:
 
     dpkg -i <package>.deb
-
-Respring the device:
-
     killall -HUP SpringBoard
 
 There should be a new menu in the device's Settings where you can
-enable the extension.
-
-Finally, kill and restart the App you want to test.
+enable the extension. Finally, kill and restart the App you want to test.
 
 The tweak can later be uninstalled using:
 
