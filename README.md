@@ -91,25 +91,38 @@ Then, the SSL Kill Switch 2 Debian package can be built using:
 OS X Instructions
 -----------------
 
-TBD.
+SSL Kill Switch 2 can be used in OS X Apps as a dynamic library to be injected into processes.
+
 
 ### Usage
 
-* dlopen() in lldb
-* DYLD_INSERT_LIBRARIES
+On OS X, the SSLKillSwitch library needs to be manually injected into the process where 
+SSL pinning needs to be disabled. Once injected, it will automatically override and disable 
+SSL validation. 
+
+There are several ways to do this including:
+
+* Start the process with LLDB and load SSLKillSwitch using `dlopen()`
+* Using DYLD\_INSERT\_LIBRARIES to inject SSLKillSwitch and start the process
+
 
 ### Restricted Apps
 
 TBD
 
+
 ### Build
 
-TBD
+Use the Xcode project to build SSL Kill Switch 2 for OS X. The compiled library will then be 
+available in _Products/SSLKillSwitch.framework/Versions/A/SSLKillSwitch_. This is the binary 
+that you need to inject in the process where you want to disable SSL pinning.
 
 
 Changelog
 ---------
 
+* V0.8: Added support for iOS 9 and extended the MobileLoader filter to simplify the proxy-ing 
+of the Apple App Store application.
 * v0.7: Renamed tool to SSL Kill Switch 2; added support for OS X Apps and TrustKit.
 * v0.6: Added support for iOS 7.
 * v0.5: Complete rewrite in order to add support for proxy-ing Apple's App Store application.
