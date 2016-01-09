@@ -1,1 +1,8 @@
-Filter = {Bundles = ("com.apple.UIKit");};
+{
+	Filter = {
+		Bundles = (
+			"com.apple.AuthKit",
+			"com.apple.UIKit",
+		);
+	};
+}
