@@ -121,6 +121,7 @@ that you need to inject in the process where you want to disable SSL pinning.
 Changelog
 ---------
 
+* v0.10: Added support for proxy-ing [CocoaSPDY][https://github.com/twitter/CocoaSPDY] Apps (ie. Twitter iOS).
 * v0.9: Extended the MobileLoader filter to simplify the proxy-ing of the Apple App Store application.
 * V0.8: Added support for iOS 9.
 * v0.7: Renamed tool to SSL Kill Switch 2; added support for OS X Apps and TrustKit.

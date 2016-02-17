@@ -121,6 +121,35 @@ static OSStatus replaced_SSLHandshake(SSLContextRef context)
 }
 
 
+#pragma mark CocoaSPDY hook
+
+static void (*oldSetTLSTrustEvaluator)(id self, SEL _cmd, id evaluator);
+
+static void newSetTLSTrustEvaluator(id self, SEL _cmd, id evaluator)
+{
+    // Set a nil evaluator to disable SSL validation
+    oldSetTLSTrustEvaluator(self, _cmd, nil);
+}
+
+static void (*oldSetprotocolClasses)(id self, SEL _cmd, NSArray <Class> *protocolClasses);
+
+static void newSetprotocolClasses(id self, SEL _cmd, NSArray <Class> *protocolClasses)
+{
+    // Do not register protocol classes which is how CocoaSPDY works
+    // This should force the App to downgrade from SPDY to HTTPS
+}
+
+static void (*oldRegisterOrigin)(id self, SEL _cmd, NSString *origin);
+
+static void newRegisterOrigin(id self, SEL _cmd, NSString *origin)
+{
+    // Do not register protocol classes which is how CocoaSPDY works
+    // This should force the App to downgrade from SPDY to HTTPS
+}
+
+
+
+
 #pragma mark Dylib Constructor
 
 __attribute__((constructor)) static void init(int argc, const char **argv)
@@ -131,9 +160,26 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
     {
         // Substrate-based hooking; only hook if the preference file says so
         SSKLog(@"Subtrate hook enabled.");
+        
+        // SecureTransport hooks
         MSHookFunction((void *) SSLHandshake,(void *)  replaced_SSLHandshake, (void **) &original_SSLHandshake);
         MSHookFunction((void *) SSLSetSessionOption,(void *)  replaced_SSLSetSessionOption, (void **) &original_SSLSetSessionOption);
         MSHookFunction((void *) SSLCreateContext,(void *)  replaced_SSLCreateContext, (void **) &original_SSLCreateContext);
+        
+        // CocoaSPDY hooks - https://github.com/twitter/CocoaSPDY
+        // TODO: Enable these hooks for the fishhook-based hooking so it works on OS X too
+        Class spdyProtocolClass = NSClassFromString(@"SPDYProtocol");
+        if (spdyProtocolClass)
+        {
+            // Disable trust evaluation
+            MSHookMessageEx(object_getClass(spdyProtocolClass), NSSelectorFromString(@"setTLSTrustEvaluator:"), (IMP) &newSetTLSTrustEvaluator, (IMP *)&oldSetTLSTrustEvaluator);
+            
+            // CocoaSPDY works by getting registered as a NSURLProtocol; block that so the Apps switches back to HTTP as SPDY is tricky to proxy
+            Class spdyUrlConnectionProtocolClass = NSClassFromString(@"SPDYURLConnectionProtocol");
+            MSHookMessageEx(object_getClass(spdyUrlConnectionProtocolClass), NSSelectorFromString(@"registerOrigin:"), (IMP) &newRegisterOrigin, (IMP *)&oldRegisterOrigin);
+            
+            MSHookMessageEx(NSClassFromString(@"NSURLSessionConfiguration"), NSSelectorFromString(@"setprotocolClasses:"), (IMP) &newSetprotocolClasses, (IMP *)&oldSetprotocolClasses);
+        }
     }
     else
     {
