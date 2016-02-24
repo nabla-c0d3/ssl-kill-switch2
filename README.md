@@ -104,8 +104,8 @@ There are several ways to do this including:
 
 * Starting the process with LLDB and load SSLKillSwitch using `dlopen()`:
 
-    (lldb) expr (void*)dlopen("/path/to/build/SSLKillSwitch.framework/Versions/A/SSLKillSwitch", 1)
-    (void *) $1 = 0x00007f92e74d10c0
+        (lldb) expr (void*)dlopen("/path/to/build/SSLKillSwitch.framework/Versions/A/SSLKillSwitch", 1)
+        (void *) $1 = 0x00007f92e74d10c0
 
 * Using DYLD\_INSERT\_LIBRARIES to inject SSLKillSwitch and start the process.
 
