@@ -102,7 +102,8 @@ SSL validation.
 
 There are several ways to do this including:
 
-* Start the process with LLDB and load SSLKillSwitch using `dlopen()`:                                                                                                                            
+* Start the process with LLDB and load SSLKillSwitch using `dlopen()`:
+                                                                                                           
     (lldb) expr (void*)dlopen("/Users/nabla/Library/Developer/Xcode/DerivedData/SSLKillSwitch-grsuhoaqphmxauddxmujsdgvwaio/Build/Products/Debug/SSLKillSwitch.framework/Versions/A/SSLKillSwitch", 1)
     (void *) $7 = 0x00007f92e74d10c0
 
