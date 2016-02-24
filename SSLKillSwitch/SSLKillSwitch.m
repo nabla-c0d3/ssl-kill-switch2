@@ -122,6 +122,7 @@ static OSStatus replaced_SSLHandshake(SSLContextRef context)
 
 
 #pragma mark CocoaSPDY hook
+#if SUBSTRATE_BUILD
 
 static void (*oldSetTLSTrustEvaluator)(id self, SEL _cmd, id evaluator);
 
@@ -146,7 +147,7 @@ static void newRegisterOrigin(id self, SEL _cmd, NSString *origin)
     // Do not register protocol classes which is how CocoaSPDY works
     // This should force the App to downgrade from SPDY to HTTPS
 }
-
+#endif
 
 
 
