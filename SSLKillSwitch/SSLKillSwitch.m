@@ -147,8 +147,73 @@ static void newRegisterOrigin(id self, SEL _cmd, NSString *origin)
     // Do not register protocol classes which is how CocoaSPDY works
     // This should force the App to downgrade from SPDY to HTTPS
 }
-#endif
 
+
+#pragma mark RCTSRWebSocket hook
+
+static void (*oldSetRCTSR_SSLPinnedCertificates)(id self, SEL _cmd, id certs);
+
+static void newSetRCTSR_SSLPinnedCertificates(id self, SEL _cmd, id certs)
+{
+    // Do nothing to disable the ability to enable pinning
+    SSKLog(@"Called RCTSRWebSocket");
+    return;
+}
+
+
+#pragma mark FBMQTTNativeClient hook
+
+static BOOL (*old_verifyCertificate)(id self, SEL _cmd, SecTrustRef trust, id arg2);
+
+static BOOL new_verifyCertificate(id self, SEL _cmd, SecTrustRef trust, id arg2)
+{
+    // Yes of course, this certificate is trusted
+    SSKLog(@"Called FBMQTTNativeClient");
+    return YES;
+}
+
+
+#pragma mark FBSSLPinningVerifier hook
+
+static BOOL (*oldCheckPinning)(id self, SEL _cmd, id args1);
+
+static BOOL newCheckPinning(id self, SEL _cmd, id args1)
+{
+    // Yes of course, this certificate is trusted
+    SSKLog(@"Called FBSSLPinningVerifier");
+    return YES;
+}
+
+static id (*oldSharedVerifier)(id self, SEL _cmd);
+
+static id newSharedVerifier(id self, SEL _cmd)
+{
+    // Yes of course, this certificate is trusted
+    SSKLog(@"Called FBSSLPinningVerifier sharedVerifier");
+    return oldSharedVerifier(self, _cmd);
+}
+
+static id (*oldSharedStore)(id self, SEL _cmd);
+
+static id newSharedStore(id self, SEL _cmd)
+{
+    // Yes of course, this certificate is trusted
+    SSKLog(@"Called OAUTH2 sharedStore");
+    return oldSharedStore(self, _cmd);
+}
+
+static id (*oldSendQuery)(id self, SEL _cmd, id arg1, id arg2, id arg3, id arg4, id arg5);
+
+static id newSendQuery(id self, SEL _cmd, id arg1, id arg2, id arg3, id arg4, id arg5)
+{
+    // Yes of course, this certificate is trusted
+    SSKLog(@"Called SEND QUERY");
+    return oldSendQuery(self, _cmd, arg1, arg2, arg3, arg4, arg5);
+}
+
+
+
+#endif
 
 
 #pragma mark Dylib Constructor
@@ -167,7 +232,7 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
         MSHookFunction((void *) SSLSetSessionOption,(void *)  replaced_SSLSetSessionOption, (void **) &original_SSLSetSessionOption);
         MSHookFunction((void *) SSLCreateContext,(void *)  replaced_SSLCreateContext, (void **) &original_SSLCreateContext);
         
-        // CocoaSPDY hooks - https://github.com/twitter/CocoaSPDY
+        // CocoaSPDY hooks (for Twitter) - https://github.com/twitter/CocoaSPDY
         // TODO: Enable these hooks for the fishhook-based hooking so it works on OS X too
         Class spdyProtocolClass = NSClassFromString(@"SPDYProtocol");
         if (spdyProtocolClass)
@@ -181,6 +246,50 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
             
             MSHookMessageEx(NSClassFromString(@"NSURLSessionConfiguration"), NSSelectorFromString(@"setprotocolClasses:"), (IMP) &newSetprotocolClasses, (IMP *)&oldSetprotocolClasses);
         }
+        
+        
+        // RCTSRWebSocket hooks (for Facebook) - https://github.com/facebook/react-native/blob/master/Libraries/WebSocket/RCTSRWebSocket.m
+        SEL webSocketPinningSelector = NSSelectorFromString(@"setRCTSR_SSLPinnedCertificates:");
+        if ([NSMutableURLRequest instancesRespondToSelector:webSocketPinningSelector])
+        {
+            SSKLog(@"Enabling WebSocket hooks");
+            MSHookMessageEx([NSMutableURLRequest class], webSocketPinningSelector, (IMP) &newSetRCTSR_SSLPinnedCertificates, (IMP *)&oldSetRCTSR_SSLPinnedCertificates);
+        }
+        
+
+        // FBMQTTNativeClient hooks (for Facebook)
+        Class FBMQTTNativeClientClass = NSClassFromString(@"FBMQTTNativeClient");
+        if (FBMQTTNativeClientClass)
+        {
+            SSKLog(@"Enabling FBMQTTNativeClient hooks");
+            MSHookMessageEx(FBMQTTNativeClientClass, NSSelectorFromString(@"_verifyCertificate:errorMessage:"), (IMP) &new_verifyCertificate, (IMP *)&old_verifyCertificate);
+        }
+        
+        // FBSSLPinningVerifier hooks (for Facebook)
+        Class FBSSLPinningVerifierClass = NSClassFromString(@"FBSSLPinningVerifier");
+        if (FBSSLPinningVerifierClass)
+        {
+            SSKLog(@"Enabling FBSSLPinningVerifier hooks");
+            MSHookMessageEx(FBSSLPinningVerifierClass, NSSelectorFromString(@"checkPinning:"), (IMP) &newCheckPinning, (IMP *)&oldCheckPinning);
+            MSHookMessageEx(object_getClass(FBSSLPinningVerifierClass), NSSelectorFromString(@"sharedVerifier"), (IMP) &newSharedVerifier, (IMP *)&oldSharedVerifier);
+        }
+        
+        Class FBDeviceBasedLoginAccountStoreClass = NSClassFromString(@"FBDeviceBasedLoginAccountStore");
+        if (FBDeviceBasedLoginAccountStoreClass)
+        {
+            SSKLog(@"Enabling FBDeviceBasedLoginAccountStore hooks");
+            MSHookMessageEx(object_getClass(FBDeviceBasedLoginAccountStoreClass), NSSelectorFromString(@"sharedStore"), (IMP) &newSharedStore, (IMP *)&oldSharedStore);
+        }
+        
+        Class FBGraphQLServiceClass = NSClassFromString(@"FBGraphQLService");
+        if (FBGraphQLServiceClass)
+        {
+            SSKLog(@"Enabling FBGraphQLService hooks");
+            MSHookMessageEx(FBGraphQLServiceClass, NSSelectorFromString(@"sendQuery:callbackQueue:successCallback:failureCallback:configurationCallback:"), (IMP) &newSendQuery, (IMP *)&oldSendQuery);
+        }
+        
+        
+        
     }
     else
     {
