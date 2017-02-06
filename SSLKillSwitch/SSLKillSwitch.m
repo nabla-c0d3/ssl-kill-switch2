@@ -11,14 +11,17 @@
 
 #if SUBSTRATE_BUILD
 #import "substrate.h"
-#else
-#import "fishhook.h"
-#import <dlfcn.h>
-#endif
-
 
 #define PREFERENCE_FILE @"/private/var/mobile/Library/Preferences/com.nablac0d3.SSLKillSwitchSettings.plist"
 #define PREFERENCE_KEY @"shouldDisableCertificateValidation"
+
+#else
+
+#import "fishhook.h"
+#import <dlfcn.h>
+
+#endif
+
 
 #pragma mark Utility Functions
 
@@ -53,7 +56,8 @@ static BOOL shouldHookFromPreference(NSString *preferenceSetting)
 #endif
 
 
-#pragma mark SSLSetSessionOption Hook
+#pragma mark SecureTransport hooks - iOS 9 and below
+// Explanation here: https://nabla-c0d3.github.io/blog/2013/08/20/ios-ssl-kill-switch-v0-dot-5-released/
 
 static OSStatus (*original_SSLSetSessionOption)(SSLContextRef context,
                                                 SSLSessionOption option,
@@ -72,13 +76,6 @@ static OSStatus replaced_SSLSetSessionOption(SSLContextRef context,
 }
 
 
-#pragma mark SSLCreateContext Hook
-
-// Declare the TrustKit selector we need here
-@protocol TrustKitMethod <NSObject>
-+ (void) resetConfiguration;
-@end
-
 static SSLContextRef (*original_SSLCreateContext)(CFAllocatorRef alloc,
                                                   SSLProtocolSide protocolSide,
                                                   SSLConnectionType connectionType);
@@ -89,25 +86,17 @@ static SSLContextRef replaced_SSLCreateContext(CFAllocatorRef alloc,
 {
     SSLContextRef sslContext = original_SSLCreateContext(alloc, protocolSide, connectionType);
     
-    // Disable TrustKit if it is present
-    Class TrustKit = NSClassFromString(@"TrustKit");
-    if (TrustKit != nil)
-    {
-        [TrustKit performSelector:@selector(resetConfiguration)];
-    }
-    
     // Immediately set the kSSLSessionOptionBreakOnServerAuth option in order to disable cert validation
     original_SSLSetSessionOption(sslContext, kSSLSessionOptionBreakOnServerAuth, true);
     return sslContext;
 }
 
 
-#pragma mark SSLHandshake Hook
-
 static OSStatus (*original_SSLHandshake)(SSLContextRef context);
 
 static OSStatus replaced_SSLHandshake(SSLContextRef context)
 {
+    
     OSStatus result = original_SSLHandshake(context);
     
     // Hijack the flow when breaking on server authentication
@@ -118,6 +107,18 @@ static OSStatus replaced_SSLHandshake(SSLContextRef context)
     }
     
     return result;
+}
+
+
+#pragma mark libsystem_coretls.dylib hooks - iOS 10
+// Explanation here: https://nabla-c0d3.github.io/blog/2017/02/05/ios10-ssl-kill-switch/
+
+static OSStatus (*original_tls_helper_create_peer_trust)(void *hdsk, bool server, SecTrustRef *trustRef);
+
+static OSStatus replaced_tls_helper_create_peer_trust(void *hdsk, bool server, SecTrustRef *trustRef)
+{
+    // Do not actually set the trustRef
+    return errSecSuccess;
 }
 
 
@@ -162,10 +163,21 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
         // Substrate-based hooking; only hook if the preference file says so
         SSKLog(@"Subtrate hook enabled.");
         
-        // SecureTransport hooks
+        // SecureTransport hooks - works up to iOS 9
         MSHookFunction((void *) SSLHandshake,(void *)  replaced_SSLHandshake, (void **) &original_SSLHandshake);
         MSHookFunction((void *) SSLSetSessionOption,(void *)  replaced_SSLSetSessionOption, (void **) &original_SSLSetSessionOption);
         MSHookFunction((void *) SSLCreateContext,(void *)  replaced_SSLCreateContext, (void **) &original_SSLCreateContext);
+        
+        // libsystem_coretls.dylib hook - works on iOS 10
+        // TODO: Enable this hook for the fishhook-based hooking so it works on OS X too
+        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+        if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10, 0, 0}])
+        {
+            // This function does not exist before iOS 10
+            void *tls_helper_create_peer_trust = dlsym(RTLD_DEFAULT, "tls_helper_create_peer_trust");
+            MSHookFunction((void *) tls_helper_create_peer_trust, (void *) replaced_tls_helper_create_peer_trust,  (void **) &original_tls_helper_create_peer_trust);
+        }
+        
         
         // CocoaSPDY hooks - https://github.com/twitter/CocoaSPDY
         // TODO: Enable these hooks for the fishhook-based hooking so it works on OS X too
