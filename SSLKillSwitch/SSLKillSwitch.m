@@ -219,6 +219,12 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
     {
         SSKLog(@"Hooking failed.");
     }
+    
+    original_tls_helper_create_peer_trust = dlsym(RTLD_DEFAULT, "tls_helper_create_peer_trust");
+    if ((rebind_symbols((struct rebinding[1]){{(char *)"tls_helper_create_peer_trust", (void *)replaced_tls_helper_create_peer_trust}}, 1) < 0))
+    {
+        SSKLog(@"Hooking failed.");
+    }
 #endif
 }
 
