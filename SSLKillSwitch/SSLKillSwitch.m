@@ -161,7 +161,7 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
     if (shouldHookFromPreference(PREFERENCE_KEY))
     {
         // Substrate-based hooking; only hook if the preference file says so
-        SSKLog(@"Subtrate hook enabled.");
+        SSKLog(@"Substrate hook enabled.");
         
         // SecureTransport hooks - works up to iOS 9
         MSHookFunction((void *) SSLHandshake,(void *)  replaced_SSLHandshake, (void **) &original_SSLHandshake);
@@ -196,7 +196,7 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
     }
     else
     {
-        SSKLog(@"Subtrate hook disabled.");
+        SSKLog(@"Substrate hook disabled.");
     }
     
 #else
