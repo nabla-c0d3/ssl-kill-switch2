@@ -102,10 +102,15 @@ SSL validation.
 
 There are several ways to do this including:
 
-* Starting the process with LLDB and load SSLKillSwitch using `dlopen()`:
+* Starting the process with LLDB or in Xcode Debug->Attach to process then pause, and load SSLKillSwitch using `dlopen()`:
 
         (lldb) expr (void*)dlopen("/path/to/build/SSLKillSwitch.framework/Versions/A/SSLKillSwitch", 1)
+        
+  Expected result is a non-zero pointer:
+  
         (void *) $1 = 0x00007f92e74d10c0
+
+  If you receive a zero pointer then you may need to enable code-signing and build for profiling then use the binary in the release folder, and even may have to copy the binary to the app's resources folder. In which case you would have seen a sandbox read violation output to console. To test a new version of the binary you need to kill the app and load it in again.
 
 * Using DYLD\_INSERT\_LIBRARIES to inject SSLKillSwitch and start the process.
 
