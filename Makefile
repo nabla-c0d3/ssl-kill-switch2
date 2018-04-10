@@ -1,14 +1,15 @@
-ARCHS := armv7 arm64
+export ARCHS := armv7 arm64
+export TARGET =  iphone:10.2:8.0
+export THEOS_DEVICE_IP = 192.168.0.135
+include $(THEOS)/makefiles/common.mk
 
-include theos/makefiles/common.mk
+TWEAK_NAME = sslkillswitch
+sslkillswitch_FILES = SSLKillSwitch/SSLKillSwitch.m 
 
-TWEAK_NAME = SSLKillSwitch2
-SSLKillSwitch2_FILES = SSLKillSwitch/SSLKillSwitch.m
-
-SSLKillSwitch2_FRAMEWORKS = Security
+sslkillswitch_FRAMEWORKS = Security
 
 # Build as a Substrate Tweak
-SSLKillSwitch2_CFLAGS=-DSUBSTRATE_BUILD
+sslkillswitch_CFLAGS=-DSUBSTRATE_BUILD
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 include $(THEOS_MAKE_PATH)/aggregate.mk

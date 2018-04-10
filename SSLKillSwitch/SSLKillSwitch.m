@@ -171,7 +171,17 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
         // libsystem_coretls.dylib hook - works on iOS 10
         // TODO: Enable this hook for the fishhook-based hooking so it works on OS X too
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-        if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10, 0, 0}])
+		if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11, 0, 0}])
+		{
+				// to support iOS11
+			void* handle = dlopen("/usr/lib/libnetwork.dylib", RTLD_NOW);
+			void *tls_helper_create_peer_trust = dlsym(handle, "nw_tls_create_peer_trust");
+			if (tls_helper_create_peer_trust)
+			{
+				MSHookFunction((void *) tls_helper_create_peer_trust, (void *) replaced_tls_helper_create_peer_trust,  (void **) &original_tls_helper_create_peer_trust);
+			}
+		}
+        else if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10, 0, 0}])
         {
             // This function does not exist before iOS 10
             void *tls_helper_create_peer_trust = dlsym(RTLD_DEFAULT, "tls_helper_create_peer_trust");
