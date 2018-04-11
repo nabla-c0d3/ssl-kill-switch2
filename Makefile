@@ -1,6 +1,5 @@
 export ARCHS := armv7 arm64
 export TARGET =  iphone:10.2:8.0
-export THEOS_DEVICE_IP = 192.168.0.135
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = sslkillswitch
