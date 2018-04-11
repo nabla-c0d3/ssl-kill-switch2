@@ -1,5 +1,4 @@
 export ARCHS := armv7 arm64
-export TARGET =  iphone:10.2:8.0
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = sslkillswitch
