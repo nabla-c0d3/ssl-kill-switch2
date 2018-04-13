@@ -173,7 +173,7 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
 		if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11, 0, 0}])
 		{
-				// to support iOS11
+            // Support for iOS 11
 			void* handle = dlopen("/usr/lib/libnetwork.dylib", RTLD_NOW);
 			void *tls_helper_create_peer_trust = dlsym(handle, "nw_tls_create_peer_trust");
 			if (tls_helper_create_peer_trust)
@@ -183,7 +183,7 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
 		}
         else if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10, 0, 0}])
         {
-            // This function does not exist before iOS 10
+            // Support for iOS 10
             void *tls_helper_create_peer_trust = dlsym(RTLD_DEFAULT, "tls_helper_create_peer_trust");
             MSHookFunction((void *) tls_helper_create_peer_trust, (void *) replaced_tls_helper_create_peer_trust,  (void **) &original_tls_helper_create_peer_trust);
         }
