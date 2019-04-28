@@ -1,8 +1,6 @@
 SSL Kill Switch 2
 =================
 
-[![Build Status](https://travis-ci.org/nabla-c0d3/ssl-kill-switch2.svg?branch=master)](https://travis-ci.org/nabla-c0d3/ssl-kill-switch2)
-
 Blackbox tool to disable SSL certificate validation - including certificate
 pinning - within iOS and OS X Apps. Second iteration of 
 https://github.com/iSECPartners/ios-ssl-kill-switch .
@@ -86,6 +84,8 @@ OS X Instructions
 
 SSL Kill Switch 2 can be used in OS X Apps as a dynamic library to be injected into processes.
 
+### WARNING: THIS HAS NOT BEEN TESTED ON RECENT VERSIONS OF MACOS
+
 ### Usage
 
 On OS X, the SSLKillSwitch library needs to be manually injected into the process where 
@@ -119,6 +119,7 @@ that you need to inject in the process where you want to disable SSL pinning.
 Changelog
 ---------
 
+* v0.13: Added support for iOS 12.
 * v0.12: Added support for iOS 11.
 * v0.11: Added support for iOS 10.
 * v0.10: Added support for proxy-ing [CocoaSPDY](https://github.com/twitter/CocoaSPDY) Apps (ie. Twitter iOS).

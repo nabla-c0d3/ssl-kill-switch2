@@ -122,6 +122,41 @@ static OSStatus replaced_tls_helper_create_peer_trust(void *hdsk, bool server, S
 }
 
 
+#pragma mark BoringSSL hooks - iOS 12
+
+// Everyone's favorite OpenSSL constant
+#define SSL_VERIFY_NONE 0
+
+// Constant defined in BoringSSL
+enum ssl_verify_result_t {
+    ssl_verify_ok = 0,
+    ssl_verify_invalid,
+    ssl_verify_retry,
+};
+
+
+char *replaced_SSL_get_psk_identity(void *ssl)
+{
+    return "notarealPSKidentity";
+}
+
+
+static int custom_verify_callback_that_does_not_validate(void *ssl, uint8_t *out_alert)
+{
+    // Yes this certificate is 100% valid...
+    return ssl_verify_ok;
+}
+
+
+static void (*original_SSL_CTX_set_custom_verify)(void *ctx, int mode, int (*callback)(void *ssl, uint8_t *out_alert));
+static void replaced_SSL_CTX_set_custom_verify(void *ctx, int mode, int (*callback)(void *ssl, uint8_t *out_alert))
+{
+    SSKLog(@"Entering replaced_SSL_CTX_set_custom_verify()");
+    original_SSL_CTX_set_custom_verify(ctx, SSL_VERIFY_NONE, custom_verify_callback_that_does_not_validate);
+    return;
+}
+
+
 #pragma mark CocoaSPDY hook
 #if SUBSTRATE_BUILD
 
@@ -151,49 +186,68 @@ static void newRegisterOrigin(id self, SEL _cmd, NSString *origin)
 #endif
 
 
-
 #pragma mark Dylib Constructor
 
 __attribute__((constructor)) static void init(int argc, const char **argv)
 {
 #if SUBSTRATE_BUILD
-    // Should we enable the hook ?
+    // Substrate-based hooking; only hook if the preference file says so
     if (shouldHookFromPreference(PREFERENCE_KEY))
     {
-        // Substrate-based hooking; only hook if the preference file says so
         SSKLog(@"Substrate hook enabled.");
         
-        // SecureTransport hooks - works up to iOS 9
-        MSHookFunction((void *) SSLHandshake,(void *)  replaced_SSLHandshake, (void **) &original_SSLHandshake);
-        MSHookFunction((void *) SSLSetSessionOption,(void *)  replaced_SSLSetSessionOption, (void **) &original_SSLSetSessionOption);
-        MSHookFunction((void *) SSLCreateContext,(void *)  replaced_SSLCreateContext, (void **) &original_SSLCreateContext);
-        
-        // libsystem_coretls.dylib hook - works on iOS 10
-        // TODO: Enable this hook for the fishhook-based hooking so it works on OS X too
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-		if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11, 0, 0}])
+        if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){12, 0, 0}])
+        {
+            // Support for iOS 12
+            SSKLog(@"iOS 12 detected; hooking SSL_CTX_set_custom_verify() and SSL_get_psk_identity()...");
+            
+            void* boringssl_handle = dlopen("/usr/lib/libboringssl.dylib", RTLD_NOW);
+            void *SSL_CTX_set_custom_verify = dlsym(boringssl_handle, "SSL_CTX_set_custom_verify");
+            if (SSL_CTX_set_custom_verify)
+            {
+                MSHookFunction((void *) SSL_CTX_set_custom_verify, (void *) replaced_SSL_CTX_set_custom_verify,  (void **) &original_SSL_CTX_set_custom_verify);
+            }
+            
+            void *SSL_get_psk_identity = dlsym(boringssl_handle, "SSL_get_psk_identity");
+            if (SSL_get_psk_identity)
+            {
+                MSHookFunction((void *) SSL_get_psk_identity, (void *) replaced_SSL_get_psk_identity,  (void **) NULL);
+            }
+        }
+		else if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11, 0, 0}])
 		{
             // Support for iOS 11
+            SSKLog(@"iOS 11 detected; hooking nw_tls_create_peer_trust()...");
 			void* handle = dlopen("/usr/lib/libnetwork.dylib", RTLD_NOW);
-			void *tls_helper_create_peer_trust = dlsym(handle, "nw_tls_create_peer_trust");
-			if (tls_helper_create_peer_trust)
+			void *nw_tls_create_peer_trust = dlsym(handle, "nw_tls_create_peer_trust");
+			if (nw_tls_create_peer_trust)
 			{
-				MSHookFunction((void *) tls_helper_create_peer_trust, (void *) replaced_tls_helper_create_peer_trust,  (void **) &original_tls_helper_create_peer_trust);
+				MSHookFunction((void *) nw_tls_create_peer_trust, (void *) replaced_tls_helper_create_peer_trust,  (void **) &original_tls_helper_create_peer_trust);
 			}
 		}
-        else if ([processInfo respondsToSelector:@selector(isOperatingSystemAtLeastVersion:)] && [processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10, 0, 0}])
+        else if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10, 0, 0}])
         {
             // Support for iOS 10
+            SSKLog(@"iOS 10 detected; hooking tls_helper_create_peer_trust()...");
             void *tls_helper_create_peer_trust = dlsym(RTLD_DEFAULT, "tls_helper_create_peer_trust");
             MSHookFunction((void *) tls_helper_create_peer_trust, (void *) replaced_tls_helper_create_peer_trust,  (void **) &original_tls_helper_create_peer_trust);
         }
-        
+        else if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){8, 0, 0}])
+        {
+            // SecureTransport hooks - works up to iOS 9
+            SSKLog(@"iOS 8 or 9 detected; hooking SecureTransport...");
+            MSHookFunction((void *) SSLHandshake,(void *)  replaced_SSLHandshake, (void **) &original_SSLHandshake);
+            MSHookFunction((void *) SSLSetSessionOption,(void *)  replaced_SSLSetSessionOption, (void **) &original_SSLSetSessionOption);
+            MSHookFunction((void *) SSLCreateContext,(void *)  replaced_SSLCreateContext, (void **) &original_SSLCreateContext);
+        }
         
         // CocoaSPDY hooks - https://github.com/twitter/CocoaSPDY
         // TODO: Enable these hooks for the fishhook-based hooking so it works on OS X too
         Class spdyProtocolClass = NSClassFromString(@"SPDYProtocol");
         if (spdyProtocolClass)
         {
+            SSKLog(@"CocoaSPDY detected; hooking it...");
             // Disable trust evaluation
             MSHookMessageEx(object_getClass(spdyProtocolClass), NSSelectorFromString(@"setTLSTrustEvaluator:"), (IMP) &newSetTLSTrustEvaluator, (IMP *)&oldSetTLSTrustEvaluator);
             
