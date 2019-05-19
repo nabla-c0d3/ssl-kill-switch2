@@ -123,6 +123,7 @@ static OSStatus replaced_tls_helper_create_peer_trust(void *hdsk, bool server, S
 
 
 #pragma mark BoringSSL hooks - iOS 12
+// Explanation here: https://nabla-c0d3.github.io/blog/2019/05/18/ssl-kill-switch-for-ios12/
 
 // Everyone's favorite OpenSSL constant
 #define SSL_VERIFY_NONE 0
