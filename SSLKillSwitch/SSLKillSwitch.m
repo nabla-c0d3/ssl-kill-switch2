@@ -50,6 +50,21 @@ static BOOL shouldHookFromPreference(NSString *preferenceSetting)
     {
         shouldHook = [[plist objectForKey:preferenceSetting] boolValue];
         SSKLog(@"Preference set to %d.", shouldHook);
+
+        // Checking if BundleId has been excluded by user
+        NSString *bundleId = [[NSBundle mainBundle] bundleIdentifier];
+        bundleId = [bundleId stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+
+        NSString *excludedBundleIdsString = [plist objectForKey:@"excludedBundleIds"];
+        excludedBundleIdsString = [excludedBundleIdsString stringByReplacingOccurrencesOfString:@" " withString:@""];
+
+        NSArray *excludedBundleIds = [excludedBundleIdsString componentsSeparatedByString:@","];
+
+        if ([excludedBundleIds containsObject:bundleId])
+        {
+            SSKLog(@"Not hooking excluded bundle: %@", bundleId);
+            shouldHook = NO;
+        }
     }
     return shouldHook;
 }
