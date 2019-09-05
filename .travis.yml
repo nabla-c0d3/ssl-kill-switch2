@@ -1,3 +1,2 @@
 language: objective-c
-xcode_project: SSLKillSwitch.xcodeproj
-xcode_scheme: SSLKillSwitch
+script: xcodebuild -project SSLKillSwitch.xcodeproj -scheme SSLKillSwitch build test
