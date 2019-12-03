@@ -176,7 +176,7 @@
 		8C2312061B50DB7A0057C459 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0930;
+				LastUpgradeCheck = 1120;
 				ORGANIZATIONNAME = nablac0d3;
 				TargetAttributes = {
 					8C23120E1B50DB7B0057C459 = {
@@ -189,10 +189,11 @@
 			};
 			buildConfigurationList = 8C2312091B50DB7A0057C459 /* Build configuration list for PBXProject "SSLKillSwitch" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 8C2312051B50DB7A0057C459;
 			productRefGroup = 8C2312101B50DB7B0057C459 /* Products */;
@@ -255,6 +256,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -311,6 +313,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
