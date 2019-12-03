@@ -33,6 +33,22 @@
 			<key>label</key>
 			<string>Disable Certificate Validation</string>
 		</dict>
+		<dict>
+                        <key>cell</key>
+                        <string>PSEditTextCell</string>
+                        <key>label</key>
+                        <string>Excluded BundleIDs:</string>
+                        <key>key</key>
+                        <string>excludedBundleIds</string>
+                        <key>default</key>
+                        <string></string>
+                        <key>defaults</key>
+                        <string>com.nablac0d3.SSLKillSwitchSettings</string>
+                        <key>keyboard</key>
+                        <string></string>
+                        <key>noAutoCorrect</key>
+                        <true/>
+                </dict>
 	</array>
 	<key>title</key>
 	<string>SSL Kill Switch 2</string>
