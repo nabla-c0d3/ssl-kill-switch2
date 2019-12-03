@@ -157,6 +157,7 @@ static void replaced_SSL_CTX_set_custom_verify(void *ctx, int mode, int (*callba
     return;
 }
 
+
 static void (*original_SSL_set_custom_verify)(void *ssl, int mode, int (*callback)(void *ssl, uint8_t *out_alert));
 static void replaced_SSL_set_custom_verify(void *ssl, int mode, int (*callback)(void *ssl, uint8_t *out_alert))
 {
@@ -206,39 +207,39 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
         SSKLog(@"Substrate hook enabled.");
 
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-        if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){13, 0, 0}])
+        if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){12, 0, 0}])
         {
-            // Support for iOS 13
-            SSKLog(@"iOS 13 detected; hooking SSL_set_custom_verify() and SSL_get_psk_identity()...");
-
+            // Support for iOS 12 and 13
             void* boringssl_handle = dlopen("/usr/lib/libboringssl.dylib", RTLD_NOW);
-            void *SSL_set_custom_verify = dlsym(boringssl_handle, "SSL_set_custom_verify");
-            if (SSL_set_custom_verify)
-            {
-                MSHookFunction((void *) SSL_set_custom_verify, (void *) replaced_SSL_set_custom_verify,  (void **) &original_SSL_set_custom_verify);
-            }
 
+            if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){13, 0, 0}])
+            {
+                SSKLog(@"iOS 13 detected");
+                // iOS 13 uses SSL_set_custom_verify() which was recently added to BoringSSL
+                void *SSL_set_custom_verify = dlsym(boringssl_handle, "SSL_set_custom_verify");
+                if (SSL_set_custom_verify)
+                {
+                    SSKLog(@"Hooking SSL_set_custom_verify()...");
+                    MSHookFunction((void *) SSL_set_custom_verify, (void *) replaced_SSL_set_custom_verify,  (void **) &original_SSL_set_custom_verify);
+                }
+            }
+            else
+            {
+                SSKLog(@"iOS 12 detected");
+                // iOS 12 uses the older SSL_CTX_set_custom_verify()
+                void *SSL_CTX_set_custom_verify = dlsym(boringssl_handle, "SSL_CTX_set_custom_verify");
+                if (SSL_CTX_set_custom_verify)
+                {
+                    SSKLog(@"Hooking SSL_CTX_set_custom_verify()...");
+                    MSHookFunction((void *) SSL_CTX_set_custom_verify, (void *) replaced_SSL_CTX_set_custom_verify,  (void **) &original_SSL_CTX_set_custom_verify);
+                }
+            }
+            
+            // Hook SSL_get_psk_identity() on both iOS 12 and 13
             void *SSL_get_psk_identity = dlsym(boringssl_handle, "SSL_get_psk_identity");
             if (SSL_get_psk_identity)
             {
-                MSHookFunction((void *) SSL_get_psk_identity, (void *) replaced_SSL_get_psk_identity,  (void **) NULL);
-            }
-        }
-        else if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){12, 0, 0}])
-        {
-            // Support for iOS 12
-            SSKLog(@"iOS 12 detected; hooking SSL_CTX_set_custom_verify() and SSL_get_psk_identity()...");
-
-            void* boringssl_handle = dlopen("/usr/lib/libboringssl.dylib", RTLD_NOW);
-            void *SSL_CTX_set_custom_verify = dlsym(boringssl_handle, "SSL_CTX_set_custom_verify");
-            if (SSL_CTX_set_custom_verify)
-            {
-                MSHookFunction((void *) SSL_CTX_set_custom_verify, (void *) replaced_SSL_CTX_set_custom_verify,  (void **) &original_SSL_CTX_set_custom_verify);
-            }
-
-            void *SSL_get_psk_identity = dlsym(boringssl_handle, "SSL_get_psk_identity");
-            if (SSL_get_psk_identity)
-            {
+                SSKLog(@"Hooking SSL_get_psk_identity()...");
                 MSHookFunction((void *) SSL_get_psk_identity, (void *) replaced_SSL_get_psk_identity,  (void **) NULL);
             }
         }
