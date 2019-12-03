@@ -58,8 +58,16 @@ The tweak can later be uninstalled using:
 ### Intercepting the App Store's traffic
 
 Lots of people have asked about how to intercept the App Store's traffic using
-SSL Kill Switch 2. I wrote down some instructions here:
+SSL Kill Switch 2. I wrote down some instructions here but there are now outdated:
 http://nabla-c0d3.github.io/blog/2013/08/20/intercepting-the-app-stores-traffic-on-ios/
+
+### Intercepting with Charles Proxy
+
+By default, SSL Kill Switch will disrupt the Charles Proxy iOS app and you will not be
+able to proxy any network traffic with it. To fix this, add the Charles Proxy app
+(com.xk72.Charles) to the list of excluded bundle IDs in the SSL Kill Switch config:
+
+![Charles proxy](charles.png)
 
 ### Build
 
