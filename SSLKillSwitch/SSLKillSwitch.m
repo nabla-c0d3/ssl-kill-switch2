@@ -14,6 +14,7 @@
 
 #define PREFERENCE_FILE @"/private/var/mobile/Library/Preferences/com.nablac0d3.SSLKillSwitchSettings.plist"
 #define PREFERENCE_KEY @"shouldDisableCertificateValidation"
+#import "HookUtil.h"
 
 #else
 
@@ -255,7 +256,12 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
             if (SSL_get_psk_identity)
             {
                 SSKLog(@"Hooking SSL_get_psk_identity()...");
+                // Fix for ARM64e which uses Substitue instead of CydiaSubstrate and fails at hooking some functions
+                #if defined(__arm64e__)
                 MSHookFunction((void *) SSL_get_psk_identity, (void *) replaced_SSL_get_psk_identity,  (void **) NULL);
+                #else
+                HUHookFunction("/usr/lib/libboringssl.dylib", "SSL_get_psk_identity", (void *) replaced_SSL_get_psk_identity,  (void **) NULL);
+                #endif
             }
         }
 		else if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11, 0, 0}])
@@ -284,6 +290,8 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
             MSHookFunction((void *) SSLSetSessionOption,(void *)  replaced_SSLSetSessionOption, (void **) &original_SSLSetSessionOption);
             MSHookFunction((void *) SSLCreateContext,(void *)  replaced_SSLCreateContext, (void **) &original_SSLCreateContext);
         }
+
+        SSKLog(@"Otro");
 
         // CocoaSPDY hooks - https://github.com/twitter/CocoaSPDY
         // TODO: Enable these hooks for the fishhook-based hooking so it works on OS X too
