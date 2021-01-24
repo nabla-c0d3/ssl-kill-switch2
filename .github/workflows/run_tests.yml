@@ -1,0 +1,14 @@
+name: Run Tests
+
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macOS-10.15
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build and test
+        run: xcodebuild -project SSLKillSwitch.xcodeproj -scheme SSLKillSwitch build test
