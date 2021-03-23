@@ -112,7 +112,7 @@ There are several ways to do this including:
 
   If you receive a zero pointer then you may need to enable code-signing and build for profiling then use the binary in the release folder, and even may have to copy the binary to the app's resources folder. In which case you would have seen a sandbox read violation output to console. To test a new version of the binary you need to kill the app and load it in again.
 
-* Using DYLD\_INSERT\_LIBRARIES to inject SSLKillSwitch and start the process.
+* Using `DYLD_INSERT_LIBRARIES` to inject SSLKillSwitch and start the process.
 
 ### Restricted Apps
 
@@ -144,7 +144,7 @@ Changelog
 License
 -------
 
-MIT - See ./LICENSE.
+MIT - See [LICENSE](./LICENSE).
 
 Author
 ------
