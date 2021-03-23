@@ -229,8 +229,8 @@ __attribute__((constructor)) static void init(int argc, const char **argv)
 
             if ([processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){13, 0, 0}])
             {
-                SSKLog(@"iOS 13 detected");
-                // iOS 13 uses SSL_set_custom_verify() which was recently added to BoringSSL
+                SSKLog(@"iOS 13+ detected");
+                // Both iOS 13 & 14 use SSL_set_custom_verify() which was recently added to BoringSSL
                 void *SSL_set_custom_verify = dlsym(boringssl_handle, "SSL_set_custom_verify");
                 if (SSL_set_custom_verify)
                 {

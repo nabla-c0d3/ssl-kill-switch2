@@ -127,7 +127,7 @@ that you need to inject in the process where you want to disable SSL pinning.
 Changelog
 ---------
 
-* v0.14: Added support for iOS 13.
+* v0.14: Added support for iOS 13 & 14.
 * v0.13: Added support for iOS 12.
 * v0.12: Added support for iOS 11.
 * v0.11: Added support for iOS 10.
