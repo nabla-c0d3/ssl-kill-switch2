@@ -1,24 +1,23 @@
 SSL Kill Switch 2
 =================
 
-Blackbox tool to disable SSL certificate validation - including certificate
-pinning - within iOS and OS X Apps. Second iteration of
+Blackbox tool to disable SSL/TLS certificate validation - including certificate
+pinning - within iOS and macOS applications. Second iteration of
 https://github.com/iSECPartners/ios-ssl-kill-switch .
 
 Description
 -----------
 
-Once loaded into an iOS or OS X App, SSL Kill Switch 2 patches specific
-low-level SSL functions within the Secure Transport API in order to override,
-and disable the system's default certificate validation as well as any kind
-of custom certificate validation (such as certificate pinning).
+Once loaded into an iOS or macOS application, SSL Kill Switch 2 will patch
+low-level functions responsible for handling SSL/TLS connections in order to
+override and disable the system's default certificate validation, as well as any
+kind of custom certificate validation (such as certificate pinning).
 
-It was successfully tested against various Apps implementing certificate
+It was successfully tested against various applications implementing certificate
 pinning including the Apple App Store. The first version of SSL Kill Switch
-was initially released at Black Hat Vegas 2012.
+was released at Black Hat Vegas 2012.
 
-For more technical details on how it works, see
-http://nabla-c0d3.github.io/blog/2013/08/20/ios-ssl-kill-switch-v0-dot-5-released/
+The most recent version iOS that is known to be supported is 14.2.
 
 iOS Instructions
 ----------------
@@ -87,16 +86,17 @@ Then, the SSL Kill Switch 2 Debian package can be built using:
 
     make package
 
-OS X Instructions
+macOS Instructions
 -----------------
 
-SSL Kill Switch 2 can be used in OS X Apps as a dynamic library to be injected into processes.
+SSL Kill Switch 2 can be used in macOS applications as a dynamic library to be injected into
+processes.
 
 ### WARNING: THIS HAS NOT BEEN TESTED ON RECENT VERSIONS OF MACOS
 
 ### Usage
 
-On OS X, the SSLKillSwitch library needs to be manually injected into the process where
+On macOS, the SSLKillSwitch library needs to be manually injected into the process where
 SSL pinning needs to be disabled. Once injected, it will automatically override and disable
 SSL validation.
 
@@ -120,7 +120,7 @@ TBD
 
 ### Build
 
-Use the Xcode project to build SSL Kill Switch 2 for OS X. The compiled library will then be
+Use the Xcode project to build SSL Kill Switch 2 for macOS. The compiled library will then be
 available in _Products/SSLKillSwitch.framework/Versions/A/SSLKillSwitch_. This is the binary
 that you need to inject in the process where you want to disable SSL pinning.
 
@@ -134,7 +134,7 @@ Changelog
 * v0.10: Added support for proxy-ing [CocoaSPDY](https://github.com/twitter/CocoaSPDY) Apps (ie. Twitter iOS).
 * v0.9: Extended the MobileLoader filter to simplify the proxy-ing of the Apple App Store application.
 * V0.8: Added support for iOS 9.
-* v0.7: Renamed tool to SSL Kill Switch 2; added support for OS X Apps and TrustKit.
+* v0.7: Renamed tool to SSL Kill Switch 2; added support for macOS applications and TrustKit.
 * v0.6: Added support for iOS 7.
 * v0.5: Complete rewrite in order to add support for proxy-ing Apple's App Store application.
 * v0.4: Added hooks for SecTrustEvaluate().
