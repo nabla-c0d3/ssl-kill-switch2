@@ -37,7 +37,7 @@ and any other data downloaded by any App running on the device.
 The following dependencies should be installed using Cydia:
 
 * Debian Packager
-* Cydia Substrate
+* Cydia Substrate (or Substitute from Sileo on iOS 15 and later)
 * PreferenceLoader
 
 Then, download the latest pre-compiled package available in the release tab of
