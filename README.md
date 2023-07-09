@@ -22,7 +22,7 @@ The most recent version iOS that is known to be supported is 14.2.
 iOS Instructions
 ----------------
 
-On iOS, SSL Kill Switch 2 can be installed as a Cydia Subtrate tweak on a
+On iOS, SSL Kill Switch 2 can be installed as a Cydia Subtrate tweak (or with Substitute from Sileo for iOS 15+) on a
 jailbroken device.
 
 ### WARNING: THIS TWEAK WILL MAKE YOUR DEVICE INSECURE
@@ -34,10 +34,10 @@ and any other data downloaded by any App running on the device.
 
 ### Installation
 
-The following dependencies should be installed using Cydia:
+The following dependencies should be installed using Cydia or Sileo:
 
 * Debian Packager
-* Cydia Substrate
+* Cydia Substrate (or Substitute from Sileo on iOS 15+)
 * PreferenceLoader
 
 Then, download the latest pre-compiled package available in the release tab of
